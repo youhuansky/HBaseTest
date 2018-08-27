@@ -6,12 +6,14 @@
  */
 package com.youhuan.hbase.demo;
 
-import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.MasterNotRunningException;
-import org.apache.hadoop.hbase.ZooKeeperConnectionException;
+import org.apache.hadoop.hbase.HColumnDescriptor;
+import org.apache.hadoop.hbase.HTableDescriptor;
+import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 /** 
  * @Description：
@@ -39,8 +41,15 @@ public class HBaseDemo {
 		
 		try {
 //			boolean existTables = isExistTables("student");
-			boolean existTables = isExistTables("student2");
-			System.out.println(existTables);
+//			boolean existTables = isExistTables("student2");
+//			System.out.println(existTables);
+			
+			List<String> paramsList=new ArrayList<String>();
+			paramsList.add("id");
+			paramsList.add("name");
+			String[] paramArr=new String[paramsList.size()]  ;
+			paramsList.toArray(paramArr);
+			createTable("stuff",paramArr);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -48,4 +57,20 @@ public class HBaseDemo {
 		
 	}
 	
+	
+	public static void createTable(String tableName,String... columnFamily) throws Exception {
+		
+		if(isExistTables(tableName)) {
+			System.out.println("表已经存在！！！");
+		}else {
+			HTableDescriptor hTableDescriptor = new HTableDescriptor(TableName.valueOf(tableName));		
+			System.out.println("开始创建表！！！"+tableName);
+			for (String cf : columnFamily) {
+				hTableDescriptor.addFamily(new HColumnDescriptor(cf));
+			}
+			HBaseAdmin hBaseAdmin = new HBaseAdmin(conf);
+			hBaseAdmin.createTable(hTableDescriptor);
+		}
+		
+	} 
 }
