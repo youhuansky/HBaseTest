@@ -20,6 +20,7 @@ import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.MasterNotRunningException;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.ZooKeeperConnectionException;
+import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTable;
@@ -136,7 +137,26 @@ public class HBaseDemo {
 		}
 		
 	} 
-	
+
+	/**
+	 * @Description：删除数据
+	 * <p>创建人：Administrator ,  2018年8月28日  上午10:06:52</p>
+	 * <p>修改人：Administrator ,  2018年8月28日  上午10:06:52</p>
+	 *
+	 * @param tableName
+	 * @throws Exception
+	 * void 
+	 */
+	public static void deleteData(String tableName,String rowKey) throws Exception {
+		if(!isExistTables(tableName)) {
+			System.out.println("表不存在！！！");
+		}else {
+			HTable hTable = new HTable(conf, TableName.valueOf(tableName));
+			Delete delete = new Delete(Bytes.toBytes(rowKey));
+			hTable.delete(delete);
+		}
+		
+	} 
 	
 	/**
 	 * @Description：添加一行
