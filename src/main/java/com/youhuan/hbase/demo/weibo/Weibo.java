@@ -47,8 +47,13 @@ public class Weibo {
 	 *                           void
 	 */
 	public void init() {
-		initNamespace();
+		// initNamespace();
 		createTableContent();
+	}
+
+	public static void main(String[] args) {
+		Weibo weibo = new Weibo();
+		weibo.init();
 	}
 
 	/**
@@ -71,6 +76,7 @@ public class Weibo {
 
 			connection = ConnectionFactory.createConnection(conf);
 			admin = (HBaseAdmin) connection.getAdmin();
+			// admin = new HBaseAdmin(conf);
 			NamespaceDescriptor ns_weibo = NamespaceDescriptor.create(Constants.namespaceName)
 					.addConfiguration("creator", "youhuan").build();
 			admin.createNamespace(ns_weibo);
@@ -96,10 +102,10 @@ public class Weibo {
 	/**
 	 * @Description：创建微博内容表
 	 *                      <p>
-	 * 						创建人：Administrator , 2018年9月13日 下午4:34:38
+	 *                      创建人：Administrator , 2018年9月13日 下午4:34:38
 	 *                      </p>
 	 *                      <p>
-	 * 						修改人：Administrator , 2018年9月13日 下午4:34:38
+	 *                      修改人：Administrator , 2018年9月13日 下午4:34:38
 	 *                      </p>
 	 *
 	 *                      void
@@ -118,7 +124,7 @@ public class Weibo {
 			// 创建列描述器
 			HColumnDescriptor hColumnDescriptor = new HColumnDescriptor(Bytes.toBytes(Constants.cf_info));
 			// 压缩
-			hColumnDescriptor.setCompressionType(Algorithm.SNAPPY);
+//			hColumnDescriptor.setCompressionType(Algorithm.SNAPPY);
 			// 设置版本确界
 			hColumnDescriptor.setVersions(1, 1);
 
@@ -146,10 +152,10 @@ public class Weibo {
 	/**
 	 * @Description：创建用户关系表
 	 *                      <p>
-	 * 						创建人：Administrator , 2018年9月13日 下午5:03:11
+	 *                      创建人：Administrator , 2018年9月13日 下午5:03:11
 	 *                      </p>
 	 *                      <p>
-	 * 						修改人：Administrator , 2018年9月13日 下午5:03:11
+	 *                      修改人：Administrator , 2018年9月13日 下午5:03:11
 	 *                      </p>
 	 *
 	 *                      void
@@ -202,10 +208,10 @@ public class Weibo {
 	/**
 	 * @Description：创建邮箱表
 	 *                    <p>
-	 * 					创建人：Administrator , 2018年9月13日 下午5:03:11
+	 *                    创建人：Administrator , 2018年9月13日 下午5:03:11
 	 *                    </p>
 	 *                    <p>
-	 * 					修改人：Administrator , 2018年9月13日 下午5:03:11
+	 *                    修改人：Administrator , 2018年9月13日 下午5:03:11
 	 *                    </p>
 	 *
 	 *                    void
@@ -352,7 +358,7 @@ public class Weibo {
 			// 3向我收件箱表中插入我关注人的rowkey
 			Table contentTable2 = connection.getTable(TableName.valueOf(Constants.TABLE_CONTENT));
 			Scan scan = new Scan();
-			//用于存放关注的人的发过的微博rowkey
+			// 用于存放关注的人的发过的微博rowkey
 			List<byte[]> rowkeysList = new ArrayList<byte[]>();
 			// 所有关注用户微博的rowkey
 			for (String string_uid : attends) {
@@ -367,24 +373,22 @@ public class Weibo {
 						rowkeysList.add(cloneRow);
 					}
 				}
-				if(rowkeysList.size()==0) {
-					continue ;
+				if (rowkeysList.size() == 0) {
+					continue;
 				}
 				Table inboxTable = connection.getTable(TableName.valueOf(Constants.TABLE_RECEIVE_CONTENT_EMAIL));
 				List<Put> putsList = new ArrayList<Put>();
 				Put p = new Put(Bytes.toBytes(uid));
-				for(byte[]  rk:rowkeysList) {
-					String rowkey =Bytes.toString(rk);
-	//					String attend_uid=
+				for (byte[] rk : rowkeysList) {
+					String rowkey = Bytes.toString(rk);
+					// String attend_uid=
 					p.addColumn(Bytes.toBytes(Constants.cf_info), Bytes.toBytes(string_uid), rk);
-					
+
 				}
 				inboxTable.put(p);
 				rowkeysList.clear();
 			}
-			
-			
-			
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -403,55 +407,56 @@ public class Weibo {
 
 	}
 
-	
 	/**
 	 * @Description：移除关注的用户
-	 * <p>创建人：Administrator ,  2018年9月27日  下午5:46:09</p>
-	 * <p>修改人：Administrator ,  2018年9月27日  下午5:46:09</p>
+	 *                      <p>
+	 *                      创建人：Administrator , 2018年9月27日 下午5:46:09
+	 *                      </p>
+	 *                      <p>
+	 *                      修改人：Administrator , 2018年9月27日 下午5:46:09
+	 *                      </p>
 	 *
 	 * @param uid
 	 * @param attends
-	 * void 
+	 *            void
 	 */
-	public void removeAttends(String uid,String... attends) {
-		
-		if(StringUtils.isEmpty(uid)||attends.length<0) {
+	public void removeAttends(String uid, String... attends) {
+
+		if (StringUtils.isEmpty(uid) || attends.length < 0) {
 			return;
 		}
-		
+
 		Connection connection = null;
 		try {
 			connection = ConnectionFactory.createConnection(conf);
 			// 1.获取我的用户关系表对象
 			Table contentTable = connection.getTable(TableName.valueOf(Constants.TABLE_RELATIONS));
-			//待删除的delete集合
-			List<Delete> deleteList =new ArrayList<>();
+			// 待删除的delete集合
+			List<Delete> deleteList = new ArrayList<>();
 			Delete attendDelete = new Delete(Bytes.toBytes(uid));
 			for (String attend : attends) {
-				attendDelete.addColumn(Bytes.toBytes(Constants.cf_attends),Bytes.toBytes(attend));
-				//移除对象粉丝列表中的我
+				attendDelete.addColumn(Bytes.toBytes(Constants.cf_attends), Bytes.toBytes(attend));
+				// 移除对象粉丝列表中的我
 				Delete fansDelete = new Delete(Bytes.toBytes(attend));
 				fansDelete.addColumn(Bytes.toBytes(Constants.cf_fans), Bytes.toBytes(uid));
 				deleteList.add(fansDelete);
 			}
 			deleteList.add(attendDelete);
 			contentTable.delete(deleteList);
-			//删除我的邮件箱中已经移除用户微博的rowkey
+			// 删除我的邮件箱中已经移除用户微博的rowkey
 			Table indexTable = connection.getTable(TableName.valueOf(Constants.TABLE_RECEIVE_CONTENT_EMAIL));
-			//得到收件箱中对应的我的rowkey的哪一行数据
+			// 得到收件箱中对应的我的rowkey的哪一行数据
 			Delete inboxDelete = new Delete(Bytes.toBytes(uid));
 			for (String attend : attends) {
 				inboxDelete.addColumn(Bytes.toBytes(Constants.cf_info), Bytes.toBytes(attend));
 			}
 			indexTable.delete(inboxDelete);
-			
-		}catch (Exception e) {
+
+		} catch (Exception e) {
 		}
-		
+
 	}
-	
-	
-	
+
 	public List<Message> getAttendsContent(String uid) {
 		List<Message> messageList = new ArrayList<Message>();
 		Connection connection = null;
@@ -459,9 +464,9 @@ public class Weibo {
 			connection = ConnectionFactory.createConnection(conf);
 			// 1.获取我的用户关系表对象
 			Table inboxTable = connection.getTable(TableName.valueOf(Constants.TABLE_RECEIVE_CONTENT_EMAIL));
-			//待删除的delete集合
+			// 待删除的delete集合
 			Get get = new Get(Bytes.toBytes(uid));
-			//设置确界
+			// 设置确界
 			get.setMaxVersions(50);
 			List<byte[]> rowkeyList = new ArrayList<byte[]>();
 			Result result = inboxTable.get(get);
@@ -479,21 +484,21 @@ public class Weibo {
 				for (Cell c : r.rawCells()) {
 					Message message = new Message();
 					String rowkey = Bytes.toString(CellUtil.cloneRow(c));
-					String u =rowkey.substring(0, rowkey.indexOf("_"));
-					String st =rowkey.substring(rowkey.indexOf("_")+1);
+					String u = rowkey.substring(0, rowkey.indexOf("_"));
+					String st = rowkey.substring(rowkey.indexOf("_") + 1);
 					String content = Bytes.toString(CellUtil.cloneValue(c));
-					
+
 					message.setUid(u);
 					message.setTimestamp(st);
 					message.setContent(content);
 					messageList.add(message);
 				}
 			}
-			
+
 			return messageList;
-		}catch (Exception e) {
+		} catch (Exception e) {
 		}
 		return messageList;
 	}
-	
+
 }
